@@ -1,6 +1,7 @@
 package com.example.minhasFinancas.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.example.minhasFiancas.model.enums.StatusLancamento;
 import com.example.minhasFinancas.model.entity.Lancamento;
@@ -18,4 +19,6 @@ public interface LancamentoService {
 	public void atualizarStatus(Lancamento lancamento, StatusLancamento status);
 	
 	public void validar(Lancamento lancamento);
+	
+	public Optional<Lancamento> obterPorId(Long id);
 }
