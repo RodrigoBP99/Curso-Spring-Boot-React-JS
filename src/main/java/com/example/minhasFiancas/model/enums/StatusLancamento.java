@@ -2,7 +2,7 @@ package com.example.minhasFiancas.model.enums;
 
 public enum StatusLancamento {
 
-	PEDENTE,
+	PENDENTE,
 	CANCELADO,
 	EFETIVADO
 }
