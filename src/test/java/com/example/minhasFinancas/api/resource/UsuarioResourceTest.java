@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.example.minhasFinancas.api.dto.UsuarioDTO;
+import com.example.minhasFinancas.exception.ErroAutenticacao;
+import com.example.minhasFinancas.exception.RegraNegocioException;
 import com.example.minhasFinancas.model.entity.Usuario;
 import com.example.minhasFinancas.service.LancamentoService;
 import com.example.minhasFinancas.service.UsuarioService;
@@ -62,5 +64,76 @@ public class UsuarioResourceTest {
 			.andExpect(MockMvcResultMatchers.jsonPath("id").value(usuario.getId()))
 			.andExpect(MockMvcResultMatchers.jsonPath("email").value(usuario.getEmail()))
 			.andExpect(MockMvcResultMatchers.jsonPath("nome").value(usuario.getNome()));
+	}
+	
+	@Test
+	public void deveRetornarBadRequestAoObterErroDeAutenticacao() throws Exception{
+		//cenário
+		String email = "usuario@email.com";
+		String senha = "123";
+		
+		UsuarioDTO dto = UsuarioDTO.builder().email(email).senha(senha).build();
+		
+		Mockito.when(service.autenticar(email, senha)).thenThrow(ErroAutenticacao.class);
+		
+		String json = new ObjectMapper().writeValueAsString(dto);
+		
+		//execução e verificação
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post(API.concat("/autenticar"))
+													.accept(JSON)
+													.contentType(JSON)
+													.content(json);
+		
+		mvc.perform(request)
+			.andExpect(MockMvcResultMatchers.status().isBadRequest());
+	}
+	
+	@Test
+	public void deveCriarUmNovoUsuario() throws Exception{
+		//cenário
+		String email = "usuario@email.com";
+		String senha = "123";
+		
+		UsuarioDTO dto = UsuarioDTO.builder().email(email).senha(senha).build();
+		Usuario usuario = Usuario.builder().id(1l).email(email).senha(senha).build();
+		
+		Mockito.when(service.salvarUsuario(Mockito.any(Usuario.class))).thenReturn(usuario);
+		String json = new ObjectMapper().writeValueAsString(dto);
+		
+		//execução e verificação
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+													.post(API)
+													.accept(JSON)
+													.contentType(JSON)
+													.content(json);
+		
+		mvc.perform(request)
+			.andExpect(MockMvcResultMatchers.status().isCreated())
+			.andExpect(MockMvcResultMatchers.jsonPath("id").value(usuario.getId()))
+			.andExpect(MockMvcResultMatchers.jsonPath("email").value(usuario.getEmail()))
+			.andExpect(MockMvcResultMatchers.jsonPath("nome").value(usuario.getNome()));
+	}
+	
+	@Test
+	public void deveRetornarBadRequestAoTentarCriarUmUsuarioInvalido() throws Exception{
+		//cenário
+		String email = "usuario@email.com";
+		String senha = "123";
+		
+		UsuarioDTO dto = UsuarioDTO.builder().email(email).senha(senha).build();
+		
+		Mockito.when(service.salvarUsuario(Mockito.any(Usuario.class)))
+								.thenThrow(RegraNegocioException.class);
+		String json = new ObjectMapper().writeValueAsString(dto);
+		
+		//execução e verificação
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+													.post(API)
+													.accept(JSON)
+													.contentType(JSON)
+													.content(json);
+		
+		mvc.perform(request)
+			.andExpect(MockMvcResultMatchers.status().isBadRequest());
 	}
 }
